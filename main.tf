@@ -7,8 +7,11 @@ resource "azurerm_private_dns_txt_record" "private_dns_txt_records" {
   zone_name           = each.value.zone_name
   tags                = each.value.tags
 
-  record {
-    value = each.value.record.value
+  dynamic "record" {
+    for_each = each.value.record
+    content {
+      value = record.value.value
+    }
   }
 }
 

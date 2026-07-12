@@ -18,26 +18,10 @@ EOT
     ttl                 = number
     zone_name           = string
     tags                = optional(map(string))
-    record = object({
+    record = list(object({
       value = string
-    })
+    }))
   }))
-  validation {
-    condition = alltrue([
-      for k, v in var.private_dns_txt_records : (
-        length(v.zone_name) > 0
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.private_dns_txt_records : (
-        length(v.record.value) >= 1 && length(v.record.value) <= 1024
-      )
-    ])
-    error_message = "must be between 1 and 1024 characters"
-  }
   # --- Unconfirmed validation candidates, derived from azurerm_private_dns_txt_record's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
   # or a path that crosses a list-typed block (needs its own for_each wrapping).
@@ -58,6 +42,12 @@ EOT
   #   source:    [from resourcegroups.ValidateName: invalid when len(value) == 0]
   # path: resource_group_name
   #   source:    [from resourcegroups.ValidateName] !matched
+  # path: zone_name
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: record.value
+  #   condition: length(value) >= 1 && length(value) <= 1024
+  #   message:   must be between 1 and 1024 characters
   # path: ttl
   #   source:    validation.IntBetween(1, math.MaxInt32) - bound(s) not a literal int (e.g. a named constant like math.MaxInt32) - resolve manually
   # path: tags
